@@ -1,12 +1,15 @@
 import pygame
 from spells import *
+from settings import TILE_SIZE
+from functions import loadAndScaleImage
 
 class Player():
-    def __init__(self, name, pos) -> None:
+    def __init__(self, screen, name, pos) -> None:
         print("Creating a new player")
+        self.screen: pygame.Surface = screen
         # Details
         self.name: str = name
-        self.image: pygame.Surface = pygame.image.load("assets/player.png")
+        self.image: pygame.Surface = loadAndScaleImage("src/assets/img/entities/playerTemp.png", (TILE_SIZE, TILE_SIZE))
         self.pos: pygame.Vector2 = pygame.Vector2(pos)
         # Stats
         self.maxHealth: int = 100
@@ -19,9 +22,9 @@ class Player():
         self.isAlive: bool = True
         
     def update(self) -> None:
-        print("Updating player")
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
+                print("Move")
                 if event.key == pygame.K_w:
                     self.pos.y -= self.speed
                 if event.key == pygame.K_s:
@@ -33,4 +36,4 @@ class Player():
         
         
     def draw(self) -> None:
-        print("Drawing player")
+        self.screen.blit(self.image, self.pos)

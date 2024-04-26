@@ -5,19 +5,22 @@ from world import *
 class Game:
     def __init__(self) -> None:
         pygame.init()
-        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-        self.clock = pygame.time.Clock() 
-        self.running = True
+        self.screen: pygame.Surface = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.clock: pygame.time.Clock = pygame.time.Clock() 
+        self.running: bool = True
         
-        self.world = World(self.screen)
-        self.world.generate(SECTOR_0)
+        self.world: World = World(self.screen)
+        self.world.generate(sectors["Shattered Desert"])
     
     def run(self) -> None:
         while self.running:
             # Events
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    running = False
+                    self.running = False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        self.running = False
             
             # Update
             self.world.update()

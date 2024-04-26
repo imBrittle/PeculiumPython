@@ -1,47 +1,69 @@
 import pygame
+import random
 from player import Player
 from entities import *
 from settings import TILE_SIZE
+from functions import loadAndScaleImage
 
 class World:
     def __init__(self, screen) -> None:
         self.screen: pygame.Surface = screen
         print("Creating a new world")
-        self.tiles: list = []
+        self.backgroundTiles: list = []
+        self.foregroundTiles: list = []
         self.entities: list = []
         self.player: Player = None
 
     def generate(self, sector) -> None:
-        print("Generating {sector}")
-        self.player: Player = Player("Player")
+        print(f"Generating Sector: Shattered Desert")
+        self.player: Player = Player(self.screen, "Player", (0, 0))
         self.entities.append(self.player)
-        for y, row in enumerate(sector):
+        for y, row in enumerate(sectors["Shattered Desert"]):
             for x, tile in enumerate(row):
-                # Tiles
+                # Foreground Tiles
                 if tile == "r":
-                    self.tiles.append(Rock(x * TILE_SIZE, y * TILE_SIZE))
+                    self.foregroundTiles.append(Stone(self.screen, x * TILE_SIZE, y * TILE_SIZE))
+                else:
+                    self.foregroundTiles.append(None)
                 # Entities
                 if tile == "p":
                     self.player.pos.xy = (x * TILE_SIZE, y * TILE_SIZE)
+                # Background Tiles
+                randInt: int = random.randint(0, 1)
+                if randInt == 0:
+                    self.backgroundTiles.append(Dirt(self.screen, x * TILE_SIZE, y * TILE_SIZE))
+                elif randInt == 1:
+                    self.backgroundTiles.append(Grass(self.screen, x * TILE_SIZE, y * TILE_SIZE))
+                    
         
     def update(self) -> None:
-        for tile in self.tiles:
-            tile.update()
+        for tile in self.backgroundTiles:
+            if tile:
+                tile.update()
+        for tile in self.foregroundTiles:
+            if tile:
+                tile.update()
         for entity in self.entities:
             entity.update()
+        self.player.update()
     
     def draw(self) -> None:
-        for tile in self.tiles:
-            tile.draw()
+        for tile in self.backgroundTiles:
+            if tile:
+                tile.draw()
+        for tile in self.foregroundTiles:
+            if tile:
+                tile.draw()
         for entity in self.entities:
             entity.draw()
+        self.player.draw()
             
 class Tile:
-    def __init__(self, screen, x, y) -> None:
+    def __init__(self, screen: pygame.Surface, x: int, y: int) -> None:
         self.screen: pygame.Surface = screen
         self.x: int = x
         self.y: int = y
-        self.image: pygame.Surface = pygame.image.load(f"assets/tiles/tile{self.name}.png")
+        self.image: pygame.Surface = loadAndScaleImage(f"src/assets/img/tiles/tile{self.name}.png", (TILE_SIZE, TILE_SIZE))
         
     def update(self) -> None:
         pass
@@ -50,21 +72,21 @@ class Tile:
         self.screen.blit(self.image, (self.x, self.y))
         
 class Dirt(Tile):
-    def __init__(self, x, y) -> None:
-        super().__init__(x, y)
+    def __init__(self, screen: pygame.Surface, x: int, y: int) -> None:
         self.name: str = "Dirt"
+        super().__init__(screen, x, y)
         
 class Grass(Tile):
-    def __init__(self, x, y) -> None:
-        super().__init__(x, y)
+    def __init__(self, screen: pygame.Surface, x: int, y: int) -> None:
         self.name: str = "Grass"
+        super().__init__(screen, x, y)
         
-class Rock(Tile):
-    def __init__(self, x, y) -> None:
-        super().__init__(x, y)
-        self.name: str = "Rock"
+class Stone(Tile):
+    def __init__(self, screen: pygame.Surface, x, y) -> None:
+        self.name: str = "Stone"
+        super().__init__(screen, x, y)
             
-SECTOR_0: list = [
+sectors: dict[str, list] = {"Shattered Desert": [
     "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
     "r                              r",
     "r p                            r",
@@ -97,4 +119,4 @@ SECTOR_0: list = [
     "r                              r",
     "r                              r",
     "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
-]
+]}
