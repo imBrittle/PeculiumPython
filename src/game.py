@@ -9,8 +9,8 @@ class Game:
         self.clock: pygame.time.Clock = pygame.time.Clock() 
         self.running: bool = True
         
-        self.world: World = World(self.screen)
-        self.world.generate(sectors["Shattered Desert"])
+        self.world: World = World(self.screen, sectors)
+        self.world.generate("Shattered Desert")
     
     def run(self) -> None:
         while self.running:
@@ -21,6 +21,8 @@ class Game:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         self.running = False
+                    if event.key == pygame.K_i:
+                        print(self.world.tileOffset)
             
             # Update
             self.world.update()
