@@ -1,4 +1,6 @@
 import pygame
+from functions import loadAndScaleImage
+from settings import TILE_SIZE
 
 class Entity:
     def __init__(self, screen: pygame.Surface, tileOffset: pygame.Vector2, name: str, pos: pygame.Vector2, maxHealth: int, maxSpeed: pygame.Vector2, multiplier: tuple = (1, 1)):
@@ -7,7 +9,7 @@ class Entity:
         self.tileOffset: pygame.Vector2 = tileOffset
         # Details
         self.name: str = name
-        self.image: pygame.Surface = pygame.image.load(f"src/assets/img/entities/entity{self.name}.png")
+        self.image: pygame.Surface = loadAndScaleImage(f"src/assets/img/entities/entity{self.name}.png", (TILE_SIZE, TILE_SIZE))
         self.dimensions: pygame.Vector2 = pygame.Vector2(self.image.get_size())
         self.pos: pygame.Vector2 = pygame.Vector2(pos)
         self.posCentre: pygame.Vector2 = self.pos + self.dimensions.xy / 2
@@ -40,22 +42,22 @@ class Entity:
         self.screen.blit(self.image, self.drawPos)
 
 class HostileEntity(Entity):
-    def __init__(self, name, pos, health):
-        super().__init__(name, pos, health)
+    def __init__(self, screen: pygame.Surface, tileOffset: pygame.Vector2, name: str, pos: tuple, maxHealth: int, maxSpeed: int, multiplier: tuple = (1, 1)) -> None:
+        super().__init__(screen, tileOffset, name, pos, maxHealth, maxSpeed, multiplier)
 
 class NeutralEntity(Entity):
-    def __init__(self, name, pos, health, damage):
-        super().__init__(name, pos, health, damage)
+    def __init__(self, screen: pygame.Surface, tileOffset: pygame.Vector2, name: str, pos: tuple, maxHealth: int, maxSpeed: int, multiplier: tuple = (1, 1)):
+        super().__init__(screen, tileOffset, name, pos, maxHealth, maxSpeed, multiplier)
 
 class PassiveEntity(Entity):
-    def __init__(self, name, pos, health):
-        super().__init__(name, pos, health, 0)
+    def __init__(self, screen: pygame.Surface, tileOffset: pygame.Vector2, name: str, pos: tuple, maxHealth: int, maxSpeed: int, multiplier: tuple = (1, 1)):
+        super().__init__(screen, tileOffset, name, pos, maxHealth, maxSpeed, multiplier)
 
 class BossEntity(Entity):
-    def __init__(self, name, pos, health, damage):
-        super().__init__(name, pos, health, damage)
+    def __init__(self, screen: pygame.Surface, tileOffset: pygame.Vector2, name: str, pos: tuple, maxHealth: int, maxSpeed: int, multiplier: tuple = (1, 1)):
+        super().__init__(screen, tileOffset, name, pos, maxHealth, maxSpeed, multiplier)
         
 # Specific Entities
 class PyrusSpirit(HostileEntity):
     def __init__(self, screen: pygame.Surface, tileOffset: pygame.Vector2, pos: pygame.Vector2, multiplier: tuple = (1, 1)) -> None:
-        super().__init__(screen, tileOffset, "PyrusSpirit", pos)
+        super().__init__(screen, tileOffset, "PyrusSpirit", pos, 100, 5, multiplier)

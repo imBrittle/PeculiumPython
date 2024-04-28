@@ -36,7 +36,7 @@ class World:
                 if tile == "p":
                     self.player.pos.xy = (x * TILE_SIZE, y * TILE_SIZE)
                 if tile == "s":
-                    self.entities.append(PyrusSpirit(self.screen, (x * TILE_SIZE, y * TILE_SIZE)))
+                    self.entities.append(PyrusSpirit(self.screen, self.tileOffset, (x * TILE_SIZE, y * TILE_SIZE), (1, 1)))
                 # Background Tiles
                 randInt: int = random.randint(0, 1)
                 if randInt == 0:
@@ -55,7 +55,7 @@ class World:
             if tile:
                 tile.update(self.tileOffset)
         for entity in self.entities:
-            entity.update(self.tileOffset)
+            entity.update()
         self.tileOffset = self.player.update(self.tileOffset, self.tileCount)
     
     def draw(self) -> None:
