@@ -1,11 +1,11 @@
 import pygame
 from spells import *
-from settings import TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT
-from functions import loadAndScaleImage
+from settings import TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT, DEFAULT_FONT
+from functions import loadAndScaleImage, drawText
 
 class Player():
-    def __init__(self, screen, name, pos) -> None:
-        print("Creating a new player")
+    def __init__(self, screen, tileOffset, spellObjects, name, pos) -> None:
+        print(f"Loaded player: {name} @ {pos}")
         self.screen: pygame.Surface = screen
         # Details
         self.name: str = name
@@ -14,27 +14,29 @@ class Player():
         self.pos: pygame.Vector2 = pygame.Vector2(pos)
         self.posCentre: pygame.Vector2 = self.pos + self.dimensions.xy / 2
         self.drawPos: pygame.Vector2 = pygame.Vector2(pos)
+        self.drawPosCentre: pygame.Vector2 = self.drawPos + self.dimensions.xy / 2
         self.velocity: pygame.Vector2 = pygame.Vector2(0, 0)
         self.direction: pygame.Vector2 = pygame.Vector2(0, 0)
+        self.spellObjects: list = spellObjects
+        self.tileOffset: pygame.Vector2 = tileOffset
         # Stats
         self.maxHealth: int = 100
         self.health: int = self.maxHealth
         self.maxSpeed: pygame.Vector2 = pygame.Vector2(8, 8)
         self.speed: pygame.Vector2 = self.maxSpeed
         # Spells
-        self.spellPrimeOne: Spell = SpellBurn(self.screen)
-        self.spellPrimeTwo: Spell = None
-        self.spellSignature: Spell = None
-        self.spellUltimate: Spell = None
-        self.activeSpell: Spell = self.spellPrimeOne
+        self.spells = [SpellBurn(self.screen, self.spellObjects), None, None, None]
+        self.activeSpell: Spell = self.spells[0]
         # States
         self.isAlive: bool = True
         
     def attack(self) -> None:
         mousePos: tuple = pygame.mouse.get_pos()
-        self.activeSpell.attack(mousePos, self.posCentre)
+        offsetMousePos: tuple = mousePos[0] + self.tileOffset.x, mousePos[1] + self.tileOffset.y
+        self.activeSpell.attack(offsetMousePos, self.drawPosCentre)
         
-    def update(self, tileOffset: pygame.Vector2, tileCount: tuple) -> None:
+    def update(self, tileCount: tuple) -> None:
+        prevSpell = self.activeSpell.name if self.activeSpell else "None"
         # Key Input
         keys: list = pygame.key.get_pressed()
         mb: list = pygame.mouse.get_pressed(num_buttons = 5)
@@ -50,15 +52,27 @@ class Player():
             self.direction.x = 1
         # Spells
         if keys[pygame.K_q]:
-            self.activeSpell = self.spellPrimeOne
+            self.activeSpell = self.spells[0]
         if keys[pygame.K_e]:
-            self.activeSpell = self.spellPrimeTwo
+            self.activeSpell = self.spells[1]
         if keys[pygame.K_c]:
-            self.activeSpell = self.spellSignature
+            self.activeSpell = self.spells[2]
         if keys[pygame.K_x]:
-            self.activeSpell = self.spellUltimate
+            self.activeSpell = self.spells[3]
         if self.activeSpell and mb[0] and self.activeSpell.currentCooldown == 0:
             self.attack()
+        if self.activeSpell:
+            if self.activeSpell.name != prevSpell:
+                print(f"Active Spell: {self.activeSpell.name}")
+        else:
+            if prevSpell != "None":
+                print("Active Spell: None")
+                
+        # Dev Controls
+        if keys[pygame.K_MINUS]:
+            self.health -= 1
+        if keys[pygame.K_EQUALS]:
+            self.health += 1
         
         # Normalise Vector
         if self.direction.length() != 0:
@@ -69,29 +83,55 @@ class Player():
         # Update Tile Offset Y
         verticalPixels: int = TILE_SIZE * tileCount[1]
         if self.posCentre.y > (SCREEN_HEIGHT / 2) and self.posCentre.y < verticalPixels - (SCREEN_HEIGHT / 2):
-            tileOffset.y += self.velocity.y
+            self.tileOffset.y += self.velocity.y
             
         # Update Tile Offset X
         horizontalPixels: int = TILE_SIZE * tileCount[0]
         if self.posCentre.x > (SCREEN_WIDTH / 2) and self.posCentre.x < horizontalPixels - (SCREEN_WIDTH / 2):
-            tileOffset.x += self.velocity.x
+            self.tileOffset.x += self.velocity.x
         
         # Check this code here
-        if tileOffset.x < 0:
-            tileOffset.x = 0
-        if tileOffset.x > horizontalPixels - SCREEN_WIDTH:
-            tileOffset.x = horizontalPixels - SCREEN_WIDTH
-        if tileOffset.y < 0:
-            tileOffset.y = 0
-        if tileOffset.y > verticalPixels - SCREEN_HEIGHT:
-            tileOffset.y = verticalPixels - SCREEN_HEIGHT
-            
+        if self.tileOffset.x < 0:
+            self.tileOffset.x = 0
+        if self.tileOffset.x > horizontalPixels - SCREEN_WIDTH:
+            self.tileOffset.x = horizontalPixels - SCREEN_WIDTH
+        if self.tileOffset.y < 0:
+            self.tileOffset.y = 0
+        if self.tileOffset.y > verticalPixels - SCREEN_HEIGHT:
+            self.tileOffset.y = verticalPixels - SCREEN_HEIGHT
+        
+        # Update Position
         self.pos += self.velocity
-        # Update Centre Position
         self.posCentre = self.pos + self.dimensions.xy / 2
         # Update Draw Position
-        self.drawPos = self.pos - tileOffset
-        return tileOffset
+        self.drawPos = self.pos - self.tileOffset
+        self.drawPosCentre = self.drawPos + self.dimensions.xy / 2
         
-    def draw(self, tileOffset) -> None:
+        # Update Spells
+        for spell in self.spells:
+            if spell:
+                spell.update()
+                
+    def drawUI(self) -> None:
+        # Draw Health Bar
+        pygame.draw.rect(self.screen, (255, 0, 0), (10, 10, 200, 20))
+        pygame.draw.rect(self.screen, (0, 255, 0), (10, 10, 200 * (self.health / self.maxHealth), 20))
+        # Draw Active Spell
+        if self.activeSpell:
+            self.screen.blit(self.activeSpell.image, (SCREEN_WIDTH - 50, 10))
+        drawText(self.screen, f"Active Spell: {self.activeSpell.name if self.activeSpell else 'None'}", (SCREEN_WIDTH - 250, 10), DEFAULT_FONT, (255, 255, 255), None)
+        # Draw Cooldown
+        if self.activeSpell:
+            drawText(self.screen, f"Cooldown: {self.activeSpell.currentCooldown}", (SCREEN_WIDTH - 250, 40), DEFAULT_FONT, (255, 255, 255), None)
+        # Draw Position
+        drawText(self.screen, f"Position: {self.pos}", (10, 40), DEFAULT_FONT, (255, 255, 255), None)
+        
+    def draw(self) -> None:
+        # Draw UI
+        self.drawUI()
+        # Draw Spells
+        for spell in self.spells:
+            if spell:
+                spell.draw()
+        # Draw Player
         self.screen.blit(self.image, self.drawPos)

@@ -1,12 +1,12 @@
 import pygame
-from entities import Projectile
 from functions import loadAndScaleImage
 from settings import TILE_SIZE
 
 class Spell():
-    def __init__(self, screen: pygame.Surface, name: str, damage: int, cooldown: float) -> None:
-        print("Creating a new spell")
-        self.screen = screen
+    def __init__(self, screen: pygame.Surface, spellObjects: list, name: str, damage: int, cooldown: int) -> None:
+        print(f"Loaded spell: {name}")
+        self.screen: pygame.Surface = screen
+        self.spellObjects: list = spellObjects
         self.name: str = name
         self.image: pygame.Surface = loadAndScaleImage(f"src/assets/img/spells/spell{self.name}.png", (TILE_SIZE / 2, TILE_SIZE / 2))
         self.damage: int = damage
@@ -15,28 +15,28 @@ class Spell():
         
 # Spell with an immediate effect.
 class SpellHitscan(Spell):
-    def __init__(self, screen: pygame.Surface, name: str, damage: int, range: float, cooldown: float) -> None:
-        super().__init__(screen, name, damage, cooldown)
-        self.range = range
+    def __init__(self, screen: pygame.Surface, spellObjects: list, name: str, damage: int, cooldown: int, range: int) -> None:
+        super().__init__(screen, spellObjects, name, damage, cooldown)
+        self.range: int = range
 
 # Spell with a projectile.
 class SpellProjectile(Spell):
-    def __init__(self, screen: pygame.Surface, name: str, damage: int, speed: float, lifetime: float) -> None:
-        super().__init__(screen, name, damage)
-        self.speed = speed
-        self.lifetime = lifetime
+    def __init__(self, screen: pygame.Surface, spellObjects: list, name: str, damage: int, cooldown: int, speed: float, lifetime: int) -> None:
+        super().__init__(screen, spellObjects, name, damage, cooldown)
+        self.speed: float = speed
+        self.lifetime: int = lifetime
         
 class SpellBurn(SpellHitscan):
-    def __init__(self, screen) -> None:
-        super().__init__(screen, name = "Burn", damage = 10, range = 200, cooldown = 1.0)
+    def __init__(self, screen, spellObjects) -> None:
+        super().__init__(screen, spellObjects, name = "Burn", damage = 10, range = 200, cooldown = 30)
     
     def attack(self, target, pos) -> None:
         self.currentCooldown = self.cooldown
-        Ray(self.screen, "src/assets/img/spells/spellBurn.png", pos, target, self.damage, self.range, ) #TODO: Implement this
+        self.spellObjects.append(Ray(self.screen, "src/assets/img/spells/spellBurn.png", pos, target, self.damage, self.range))
 
     def update(self) -> None:
-        #TODO: Check for cooldown status and other statuses.
-        pass
+        if self.currentCooldown > 0:
+            self.currentCooldown -= 1
 
     def draw(self) -> None:
         pass
@@ -64,16 +64,27 @@ class Projectile(): #! Incomplete Method
 class Ray():
     def __init__(self, screen: pygame.Surface, particleDirectory: str, pos: pygame.Vector2, target: pygame.Vector2, damage: int, range: int) -> None:
         self.screen = screen
+        self.image = loadAndScaleImage(particleDirectory, (8, 8))
         self.pos: pygame.Vector2 = pos
         self.target: pygame.Vector2 = target
+        self.targetDrawPos: pygame.Vector2 = target
+        self.damage: int = damage
         self.range: int = range
-        self.update()
-        self.draw()
+        
+    def getTarget(self) -> pygame.Vector2:
+        # Calculate the distance between pos and target. If the distance is greater than the range, return the point at the range.
+        distance: float = self.pos.distance_to(self.target)
+        if distance > self.range:
+            target = self.pos + (self.target - self.pos).normalize() * self.range
+        else:
+            target = self.target
+        return target
     
-    def update(self) -> None:
-        pass
+    def update(self, tileOffset) -> None:
+        self.drawPos = self.pos - tileOffset
+        self.targetDrawPos = self.getTarget() - tileOffset
     
     def draw(self) -> None:
         pass
-        pygame.draw.line(self.screen, (255, 0, 0), self.pos, self.pos + self.direction * self.range, 2) #! Fix this
+        pygame.draw.line(self.screen, (255, 0, 0), self.drawPos, self.targetDrawPos, 3)
         # screen.blit(self.image, self.pos)

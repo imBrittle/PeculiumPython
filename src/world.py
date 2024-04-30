@@ -12,6 +12,7 @@ class World:
         self.backgroundTiles: list = []
         self.foregroundTiles: list = []
         self.entities: list = []
+        self.spellObjects: list = []
         self.player: Player = None
         self.tileOffset: pygame.Vector2 = pygame.Vector2(0, 0)
         self.sectors: dict = sectors
@@ -19,7 +20,7 @@ class World:
 
     def generate(self, sector) -> None:
         print(f"Generating Sector: {sector}")
-        self.player: Player = Player(self.screen, "Player", (0, 0))
+        self.player: Player = Player(self.screen, self.tileOffset, self.spellObjects, "Player", (0, 0))
         tileCountX: int = 0
         tileCountY: int = 0
         for y, row in enumerate(sectors[sector]):
@@ -44,7 +45,7 @@ class World:
                 elif randInt == 1:
                     self.backgroundTiles.append(Grass(self.screen, x * TILE_SIZE, y * TILE_SIZE))
         self.tileCount = (tileCountX, tileCountY)
-        print("Tile Count: " + str(self.tileCount))
+        #* print("Tile Count: " + str(self.tileCount))
                     
         
     def update(self) -> None:
@@ -55,8 +56,12 @@ class World:
             if tile:
                 tile.update(self.tileOffset)
         for entity in self.entities:
-            entity.update()
-        self.tileOffset = self.player.update(self.tileOffset, self.tileCount)
+            if entity:
+                entity.update()
+        self.player.update(self.tileCount)
+        for spellObject in self.spellObjects:
+            if spellObject:
+                spellObject.update(self.tileOffset)
     
     def draw(self) -> None:
         for tile in self.backgroundTiles:
@@ -67,7 +72,10 @@ class World:
                 tile.draw(self.tileOffset)
         for entity in self.entities:
             entity.draw(self.tileOffset)
-        self.player.draw(self.tileOffset)
+        self.player.draw()
+        for spellObject in self.spellObjects:
+            if spellObject:
+                spellObject.draw()
             
 class Tile:
     def __init__(self, screen: pygame.Surface, x: int, y: int) -> None:
