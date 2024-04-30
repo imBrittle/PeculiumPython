@@ -19,7 +19,7 @@ class World:
         self.sectors: dict = sectors
         self.tileCount: tuple = (0, 0)
 
-    def generate(self, sector) -> None:
+    def generate(self, sector: str) -> None:
         print(f"Generating Sector: {sector}")
         self.player: Player = Player(self.screen, self.tileOffset, self.spellObjects, "Player", (0, 0))
         tileCountX: int = 0

@@ -3,7 +3,7 @@ from spells import *
 from settings import TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT, DEFAULT_FONT
 from functions import loadAndScaleImage, drawText
 
-class Player():
+class Player(pygame.sprite.Sprite):
     def __init__(self, screen, tileOffset, spellObjects, name, pos) -> None:
         print(f"Loaded player: {name} @ {pos}")
         self.screen: pygame.Surface = screen
@@ -36,7 +36,7 @@ class Player():
         self.activeSpell.attack(offsetMousePos, self.posCentre)
         
     def update(self, tileCount: tuple) -> None:
-        # Health
+        # Healthr
         if self.health <= 0:
             self.isAlive = False
         
