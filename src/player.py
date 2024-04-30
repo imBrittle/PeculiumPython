@@ -10,7 +10,7 @@ class Player():
         # Details
         self.name: str = name
         self.image: pygame.Surface = loadAndScaleImage("src/assets/img/entities/playerTemp.png", (TILE_SIZE, TILE_SIZE))
-        self.dimensions: pygame.Vector2 = pygame.Vector2(self.image.get_size())
+        self.dimensions: pygame.Vector2 = pygame.Vector2(self.image.get_width(), self.image.get_height())
         self.pos: pygame.Vector2 = pygame.Vector2(pos)
         self.posCentre: pygame.Vector2 = self.pos + self.dimensions.xy / 2
         self.drawPos: pygame.Vector2 = pygame.Vector2(pos)
@@ -22,16 +22,23 @@ class Player():
         self.maxSpeed: pygame.Vector2 = pygame.Vector2(8, 8)
         self.speed: pygame.Vector2 = self.maxSpeed
         # Spells
-        self.spellPrimeOne: Spell = None
+        self.spellPrimeOne: Spell = SpellBurn(self.screen)
         self.spellPrimeTwo: Spell = None
         self.spellSignature: Spell = None
         self.spellUltimate: Spell = None
+        self.activeSpell: Spell = self.spellPrimeOne
         # States
         self.isAlive: bool = True
+        
+    def attack(self) -> None:
+        mousePos: tuple = pygame.mouse.get_pos()
+        self.activeSpell.attack(mousePos, self.posCentre)
         
     def update(self, tileOffset: pygame.Vector2, tileCount: tuple) -> None:
         # Key Input
         keys: list = pygame.key.get_pressed()
+        mb: list = pygame.mouse.get_pressed(num_buttons = 5)
+        # Movement
         self.direction.xy = (0, 0)
         if keys[pygame.K_w]:
             self.direction.y = -1
@@ -41,6 +48,18 @@ class Player():
             self.direction.x = -1
         if keys[pygame.K_d]:
             self.direction.x = 1
+        # Spells
+        if keys[pygame.K_q]:
+            self.activeSpell = self.spellPrimeOne
+        if keys[pygame.K_e]:
+            self.activeSpell = self.spellPrimeTwo
+        if keys[pygame.K_c]:
+            self.activeSpell = self.spellSignature
+        if keys[pygame.K_x]:
+            self.activeSpell = self.spellUltimate
+        if self.activeSpell and mb[0] and self.activeSpell.currentCooldown == 0:
+            self.attack()
+        
         # Normalise Vector
         if self.direction.length() != 0:
             self.direction = self.direction.normalize()
