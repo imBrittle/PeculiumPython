@@ -1,5 +1,5 @@
 import pygame
-from functions import loadAndScaleImage
+from functions import loadAndScaleImage, drawText
 from settings import TILE_SIZE
 
 class Entity:
@@ -37,6 +37,10 @@ class Entity:
         self.posCentre = self.pos + self.dimensions.xy / 2
         # Update Draw Position
         self.drawPos = self.pos - self.tileOffset
+        
+    def drawUI(self) -> None:
+        drawText(self.screen, f"{self.name}", self.posCentre, None, (255, 255, 255), None)
+        drawText(self.screen, f"Health: {self.health}/{self.maxHealth}", self.posCentre + pygame.Vector2(0, 16), None, (255, 255, 255), None)
     
     def draw(self, tileOffset: pygame.Vector2) -> None:
         self.screen.blit(self.image, self.drawPos)

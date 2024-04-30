@@ -1,5 +1,6 @@
 import pygame
-from settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS
+from settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, GAME_OVER_FONT
+from functions import drawText, gameOver
 from world import *
 
 class Game:
@@ -25,8 +26,14 @@ class Game:
                         print(self.world.tileOffset)
             
             # Update
-            self.world.update()
+            if self.world.player.isAlive:
+                self.world.update()
+                
             # Draw
             self.world.draw()
+            if not self.world.player.isAlive:
+                gameOver(self.screen)
+            
+            # Game State Update
             pygame.display.update()
             self.clock.tick(FPS)

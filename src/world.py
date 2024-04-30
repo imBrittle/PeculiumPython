@@ -2,6 +2,7 @@ import pygame
 import random
 from player import Player
 from entities import *
+from spells import Ray
 from settings import TILE_SIZE
 from functions import loadAndScaleImage, onScreen
 
@@ -47,7 +48,6 @@ class World:
         self.tileCount = (tileCountX, tileCountY)
         #* print("Tile Count: " + str(self.tileCount))
                     
-        
     def update(self) -> None:
         for tile in self.backgroundTiles:
             if tile:
@@ -75,7 +75,7 @@ class World:
         self.player.draw()
         for spellObject in self.spellObjects:
             if spellObject:
-                spellObject.draw()
+                spellObject.draw(self.tileOffset)
             
 class Tile:
     def __init__(self, screen: pygame.Surface, x: int, y: int) -> None:

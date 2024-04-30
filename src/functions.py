@@ -1,4 +1,5 @@
 import pygame
+from settings import SCREEN_WIDTH, SCREEN_HEIGHT, GAME_OVER_FONT
 
 def loadAndScaleImage(path: str, scale: tuple) -> pygame.Surface:
     return pygame.transform.scale(pygame.image.load(path), scale)
@@ -13,3 +14,9 @@ def drawText(screen: pygame.Surface, text: str, pos: pygame.Vector2, font: pygam
     if backgroundColour:
         pygame.draw.rect(screen, backgroundColour, (pos.x, pos.y, textSurface.get_width(), textSurface.get_height()))
     screen.blit(textSurface, pos)
+    
+def gameOver(screen: pygame.Surface) -> None:
+    text = "GAME OVER"
+    text_surface = GAME_OVER_FONT.render(text, True, (255, 255, 255))
+    text_rect = text_surface.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2))
+    screen.blit(text_surface, text_rect)

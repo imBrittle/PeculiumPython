@@ -33,9 +33,13 @@ class Player():
     def attack(self) -> None:
         mousePos: tuple = pygame.mouse.get_pos()
         offsetMousePos: tuple = mousePos[0] + self.tileOffset.x, mousePos[1] + self.tileOffset.y
-        self.activeSpell.attack(offsetMousePos, self.drawPosCentre)
+        self.activeSpell.attack(offsetMousePos, self.posCentre)
         
     def update(self, tileCount: tuple) -> None:
+        # Health
+        if self.health <= 0:
+            self.isAlive = False
+        
         prevSpell = self.activeSpell.name if self.activeSpell else "None"
         # Key Input
         keys: list = pygame.key.get_pressed()
@@ -79,26 +83,19 @@ class Player():
             self.direction = self.direction.normalize()
         # Update Position
         self.velocity.xy = (self.direction.x * self.speed.x, self.direction.y * self.speed.y)
-        # TODO: Scroll player when too far right or down
-        # Update Tile Offset Y
-        verticalPixels: int = TILE_SIZE * tileCount[1]
-        if self.posCentre.y > (SCREEN_HEIGHT / 2) and self.posCentre.y < verticalPixels - (SCREEN_HEIGHT / 2):
-            self.tileOffset.y += self.velocity.y
-            
-        # Update Tile Offset X
-        horizontalPixels: int = TILE_SIZE * tileCount[0]
-        if self.posCentre.x > (SCREEN_WIDTH / 2) and self.posCentre.x < horizontalPixels - (SCREEN_WIDTH / 2):
-            self.tileOffset.x += self.velocity.x
         
-        # Check this code here
-        if self.tileOffset.x < 0:
-            self.tileOffset.x = 0
-        if self.tileOffset.x > horizontalPixels - SCREEN_WIDTH:
-            self.tileOffset.x = horizontalPixels - SCREEN_WIDTH
-        if self.tileOffset.y < 0:
-            self.tileOffset.y = 0
-        if self.tileOffset.y > verticalPixels - SCREEN_HEIGHT:
-            self.tileOffset.y = verticalPixels - SCREEN_HEIGHT
+        # Update Tile Offset Y
+        self.tileOffset.y = self.posCentre.y - SCREEN_HEIGHT / 2
+        
+        # Update Tile Offset X
+        self.tileOffset.x = self.posCentre.x - SCREEN_WIDTH / 2
+        
+        # Clamp tileOffset within game world bounds
+        horizontalPixels: int = TILE_SIZE * tileCount[0]
+        verticalPixels: int = TILE_SIZE * tileCount[1]
+        
+        self.tileOffset.x = max(0, min(self.tileOffset.x, horizontalPixels - SCREEN_WIDTH))
+        self.tileOffset.y = max(0, min(self.tileOffset.y, verticalPixels - SCREEN_HEIGHT))
         
         # Update Position
         self.pos += self.velocity
