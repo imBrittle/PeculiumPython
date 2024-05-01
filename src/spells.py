@@ -32,7 +32,7 @@ class SpellBurn(SpellHitscan):
     
     def attack(self, target, pos) -> None:
         self.currentCooldown = self.cooldown
-        self.spellObjects.append(Ray(self.screen, "src/assets/img/spells/spellBurn.png", pos, target, self.damage, self.range, pos[1]))
+        self.spellObjects.append(Ray(self.screen, "src/assets/img/spells/spellBurn.png", pos, target, self.damage, self.range, 30))
 
     def update(self) -> None:
         if self.currentCooldown > 0:
@@ -62,7 +62,7 @@ class Projectile(): #! Incomplete Method
         self.screen.blit(self.image, self.pos)
         
 class Ray():
-    def __init__(self, screen: pygame.Surface, particleDirectory: str, pos: pygame.Vector2, target: pygame.Vector2, damage: int, rayRange: int, playerYLevel: float) -> None:
+    def __init__(self, screen: pygame.Surface, particleDirectory: str, pos: pygame.Vector2, target: pygame.Vector2, damage: int, rayRange: int, lifetime: int) -> None:
         self.screen = screen
         self.image = loadAndScaleImage(particleDirectory, (16, 16))
         self.pos: pygame.Vector2 = pos
@@ -72,8 +72,12 @@ class Ray():
         self.damage: int = damage
         self.distance: float = self.pos.distance_to(self.targetDrawPos)
         self.particleDistance: float = 10
-        self.lifetime: int = int(self.distance / self.particleDistance)
-        self.particles = [self.pos.lerp(self.targetDrawPos, i / self.lifetime) for i in range(self.lifetime)]
+        self.lifetime: int = lifetime
+        self.particles: list[pygame.Vector2] = self.createParticles()
+        
+    def createParticles(self) -> list[pygame.Vector2]:
+        numParticles = int(self.distance / self.particleDistance)
+        return [(self.pos.lerp(self.targetDrawPos, i / numParticles), self.lifetime) for i in range(numParticles)]
         
     def getTarget(self) -> pygame.Vector2:
         # Calculate the distance between pos and target. If the distance is greater than the range, return the point at the range.
@@ -85,13 +89,15 @@ class Ray():
         return target
     
     def update(self, tileOffset: pygame.Vector2) -> None:
+        for i in range(len(self.particles)):
+            pos, lifetime = self.particles[i]
+            lifetime -= 1
+            self.particles[i] = pos, lifetime
         self.drawPos = self.pos - tileOffset
-        # self.targetDrawPos = self.getTarget() - tileOffset
-        self.particles = [(self.pos.lerp(self.targetDrawPos, i / self.lifetime), lifetime - 1) for i, (_, lifetime) in enumerate(self.particles) if lifetime > 0]
     
     def draw(self, tileOffset: pygame.Vector2) -> None:
         for pos, lifetime in self.particles:
-            alpha = max(0, min(255, int(lifetime * 2.55)))
+            alpha = max(0, min(255, int(lifetime / self.lifetime * 255)))
             image = self.image.copy()
             image.fill((255, 255, 255, alpha), special_flags=pygame.BLEND_RGBA_MULT)
             self.screen.blit(image, pos - tileOffset)
